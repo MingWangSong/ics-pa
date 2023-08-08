@@ -49,7 +49,7 @@ CFLAGS_TRACE += -DITRACE_COND=$(if $(CONFIG_ITRACE_COND),$(call remove_quote,$(C
 CFLAGS  += $(CFLAGS_BUILD) $(CFLAGS_TRACE) -D__GUEST_ISA__=$(GUEST_ISA)
 LDFLAGS += $(CFLAGS_BUILD)
 
-# Include rules for menuconfig
+# Include rules for menuconfig(一些用于运行和清楚编译结果的伪目标)
 include $(NEMU_HOME)/scripts/config.mk
 
 ifdef CONFIG_TARGET_AM
