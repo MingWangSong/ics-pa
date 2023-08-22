@@ -72,7 +72,7 @@ static int cmd_info(char *args) {
         printf("TODO!!\n");
     }
     else {
-        printf("Unknown command '%s'\n", cmd);
+        printf("Unknown command '%s'\n", arg);
     }
     return 0;
 }
