@@ -24,8 +24,14 @@ const char *regs[] = {
 };
 
 void isa_reg_display() {
+    //打印寄存器存储的值
+    int size = 0, i = 0;
+    size = sizeof(regs) / sizeof(regs[0]);
+    for (i = 0; i < size; i++) {
+        printf("%s %x %d\n", regs[i], cpu.gpr[i]._32, cpu.gpr[i]._32);
+    }
 }
 
 word_t isa_reg_str2val(const char *s, bool *success) {
-  return 0;
+    return 0;
 }
