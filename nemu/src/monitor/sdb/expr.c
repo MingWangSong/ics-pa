@@ -129,9 +129,10 @@ static bool make_token(char *e) {
                         break;
                     }
                     else {
-                        strncpy(&tokens[nr_token].str, substr_start, substr_len);
+                        strncpy(tokens[nr_token].str, substr_start, substr_len);
                     }
                 }
+                nr_token++;
 
                 // switch (rules[i].token_type) {
                 // case TK_NOTYPE:
@@ -163,18 +164,19 @@ word_t expr(char *e, bool *success) {
     }
 
     /* TODO: Insert codes to evaluate the expression. */
+    double ans = eval(0, nr_token);
     TODO();
 
     return 0;
 }
 
-static check_parentheses(int p, int q) {
+static bool check_parentheses(int p, int q) {
     // printf("--------------\n");  
     int i, tag = 0;
-    if (tokens[p].type != TK_LEFT || tokens[q].type != TK_RIGHT) return false; //首尾没有()则为false 
+    if (tokens[p].type != '(' || tokens[q].type != ')') return false; //首尾没有()则为false 
     for (i = p; i <= q; i++) {
-        if (tokens[i].type == TK_LEFT) tag++;
-        else if (tokens[i].type == TK_RIGHT) tag--;
+        if (tokens[i].type == '(') tag++;
+        else if (tokens[i].type == ')') tag--;
         if (tag == 0 && i < q) return false;  //(3+4)*(5+3) 返回false
     }
     if (tag != 0) return false;
@@ -185,19 +187,19 @@ int dominant_operator(int p, int q) {
     int i, dom = p, left_n = 0;
     int pr = -1;
     for (i = p; i <= q; i++) {
-        if (tokens[i].type == TK_LEFT) {
+        if (tokens[i].type == '(') {
             left_n += 1;
             i++;
             while (1) {
-                if (tokens[i].type == TK_LEFT) left_n += 1;
-                else if (tokens[i].type == TK_RIGHT) left_n--;
+                if (tokens[i].type == '(') left_n += 1;
+                else if (tokens[i].type == ')') left_n--;
                 i++;
                 if (left_n == 0)
                     break;
             }
             if (i > q)break;
         }
-        else if (tokens[i].type == TK_NUM10) continue;
+        else if (tokens[i].type == TK_NUM) continue;
         else if (pir(tokens[i].type) > pr) {
             pr = pir(tokens[i].type);
             dom = i;
@@ -243,10 +245,10 @@ static double eval(p, q) {
     else {
         // op = the position of 主运算符 in the token expression;
         int op = dominant_operator(p, q);
-        val1 = eval(p, op - 1);
-        val2 = eval(op + 1, q);
+        int val1 = eval(p, op - 1);
+        int val2 = eval(op + 1, q);
 
-        switch (op_type) {
+        switch (tokens[op].type) {
         case '+': return val1 + val2;
         case '-': return val1 - val2;
         case '*': return val1 * val2;
