@@ -29,6 +29,7 @@ void init_wp_pool();
 static char *rl_gets() {
     static char *line_read = NULL;
 
+    // 重置line_read
     if (line_read) {
         free(line_read);
         line_read = NULL;
@@ -148,6 +149,7 @@ void sdb_mainloop() {
         return;
     }
 
+    // 读取命令，执行
     for (char *str; (str = rl_gets()) != NULL; ) {
         char *str_end = str + strlen(str);
 

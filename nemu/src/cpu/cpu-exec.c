@@ -72,8 +72,9 @@ static void exec_once(Decode *s, vaddr_t pc) {
 }
 
 static void execute(uint64_t n) {
-  Decode s;
-  for (;n > 0; n--) {
+    Decode s;
+    // n是无符号数，如果传入n=-1则n是无符号数最大的数字
+    for (;n > 0; n--) {
     exec_once(&s, cpu.pc);
     g_nr_guest_inst++;
     trace_and_difftest(&s, cpu.pc);
