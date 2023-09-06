@@ -102,7 +102,7 @@ static int cmd_p(char *args) {
         bool success;
         word_t r = expr(args, &success);
         if (success) {
-            printf("%lu\n", r);
+            printf("%u\n", r);
         }
         else {
             printf("Bad expression\n");
