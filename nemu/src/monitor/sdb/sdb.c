@@ -97,6 +97,21 @@ static int cmd_x(char *args) {
     return 0;
 }
 
+static int cmd_p(char *args) {
+    if (args != NULL) {
+        bool success;
+        word_t r = expr(args, &success);
+        if (success) {
+            printf(FMT_WORD "\n", r);
+        }
+        else {
+            printf("Bad expression\n");
+        }
+
+    }
+    return 0;
+}
+
 static struct {
     const char *name;
     const char *description;
@@ -108,6 +123,7 @@ static struct {
   { "si", "Single step execution", cmd_si},
   { "info", "Print program status. r:register status; w:monitoring point information", cmd_info},
   { "x", "Scan Memory", cmd_x},
+  { "p", "Evaluate the value of expression", cmd_p },
 
   /* TODO: Add more commands */
 
