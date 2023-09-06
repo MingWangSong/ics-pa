@@ -193,7 +193,7 @@ static int dominant_operator(int p, int q) {
                 else if (op_prec_cmp(tokens[op].type, tokens[i].type) < 0) {
                     op = i;
                 }
-                else if (op_prec_cmp(tokens[dominated_op].type, tokens[i].type) == 0 &&
+                else if (op_prec_cmp(tokens[op].type, tokens[i].type) == 0 &&
                     tokens[i].type != '!' && tokens[i].type != '~' &&
                     tokens[i].type != TK_NEG && tokens[i].type != TK_REF) {
                     op = i;
@@ -202,7 +202,7 @@ static int dominant_operator(int p, int q) {
             break;
         }
     }
-
+    return op;
 }
 
 static int eval(int p, int q) {
@@ -215,15 +215,15 @@ static int eval(int p, int q) {
          * For now this token should be a number.
          * Return the value of the number.
          */
-
+        int val;
         switch (tokens[p].type) {
         case TK_REG:
             // 寄存器类型
-            val = isa_reg_str2val(tokens[p].str + 1, NULL);
+            val = (int)isa_reg_str2val(tokens[p].str + 1, NULL);
             break;
         case TK_NUM:
             // 数据类型
-            val = strtoul(tokens[p].str, NULL, 0);
+            val = (int)strtoul(tokens[p].str, NULL, 0);
             break;
         default:
             assert(0);
@@ -267,6 +267,7 @@ static int eval(int p, int q) {
         default: assert(0);
         }
     }
+    return -1;
 }
 
 word_t expr(char *e, bool *success) {
