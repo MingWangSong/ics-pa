@@ -14,6 +14,7 @@
 ***************************************************************************************/
 
 #include <isa.h>
+#include <memory/vaddr.h>
 
 /* We use the POSIX regex functions to process regular expressions.
  * Type 'man regex' for more information about POSIX regex functions.
@@ -117,7 +118,7 @@ static bool make_token(char *e) {
                     break;
                 case TK_NUM:
                 case TK_REG:
-                    sprintf(&tokens[nr_token].str, "%.*s", substr_len, substr_start);
+                    sprintf(tokens[nr_token].str, "%.*s", substr_len, substr_start);
                 default:
                     tokens[nr_token].type = rules[i].token_type;
                     nr_token++;
@@ -132,17 +133,6 @@ static bool make_token(char *e) {
         }
     }
     return true;
-}
-
-
-word_t expr(char *e, bool *success) {
-    if (!make_token(e)) {
-        *success = false;
-        return 0;
-    }
-
-    /* TODO: Insert codes to evaluate the expression. */
-    return eval(0, nr_token - 1);
 }
 
 static bool check_parentheses(int p, int q) {
@@ -177,7 +167,7 @@ static int op_prec_cmp(int t1, int t2) {
 }
 
 // 寻找主运算符
-int dominant_operator(int p, int q) {
+static int dominant_operator(int p, int q) {
     int i;
     int bracket_level = 0;
     int op = -1;
@@ -198,15 +188,15 @@ int dominant_operator(int p, int q) {
         default:
             if (bracket_level == 0) {
                 if (op == -1) {
-                    op == i;
+                    op = i;
                 }
                 else if (op_prec_cmp(tokens[op].type, tokens[i].type) < 0) {
-                    op == i;
+                    op = i;
                 }
                 else if (op_prec_cmp(tokens[dominated_op].type, tokens[i].type) == 0 &&
                     tokens[i].type != '!' && tokens[i].type != '~' &&
                     tokens[i].type != TK_NEG && tokens[i].type != TK_REF) {
-                    op == i;
+                    op = i;
                 }
             }
             break;
@@ -215,7 +205,7 @@ int dominant_operator(int p, int q) {
 
 }
 
-static int eval(p, q) {
+static int eval(int p, int q) {
     if (p > q) {
         /* Bad expression */
         assert(0);
@@ -255,7 +245,7 @@ static int eval(p, q) {
             switch (op_type) {
             case '!':return !val;
             case TK_NEG:return -val;
-            case TK_REF:return vaddr_read_safe(val, 4);
+            case TK_REF:return vaddr_read(val, 4);
             default:
                 assert(0);
             }
@@ -277,4 +267,14 @@ static int eval(p, q) {
         default: assert(0);
         }
     }
+}
+
+word_t expr(char *e, bool *success) {
+    if (!make_token(e)) {
+        *success = false;
+        return 0;
+    }
+
+    /* TODO: Insert codes to evaluate the expression. */
+    return (word_t)eval(0, nr_token - 1);
 }
