@@ -97,7 +97,6 @@ static bool make_token(char *e) {
     nr_token = 0;
 
     while (e[position] != '\0') {
-        /* Try all rules one by one. */
         for (i = 0; i < NR_REGEX; i++) {
             if (regexec(&re[i], e + position, 1, &pmatch, 0) == 0 && pmatch.rm_so == 0) {
                 char *substr_start = e + position;
@@ -135,26 +134,32 @@ static bool make_token(char *e) {
     return true;
 }
 
-static bool check_parentheses(int p, int q) {
-    // printf("--------------\n");  
-    int i, tag = 0;
-    if (tokens[p].type != '(' || tokens[q].type != ')') return false; //首尾没有()则为false 
-    for (i = p; i <= q; i++) {
-        if (tokens[i].type == '(') tag++;
-        else if (tokens[i].type == ')') tag--;
-        if (tag == 0 && i < q) return false;  //(3+4)*(5+3) 返回false
-    }
-    if (tag != 0) return false;
-    return true;
-}
+// 判断括号匹配情况
+// static bool check_parentheses(int p, int q) { 
+//     int i, tag = 0;
+//     if (tokens[p].type != '(' || tokens[q].type != ')') return false; //首尾没有()则为false 
+//     for (i = p; i <= q; i++) {
+//         if (tokens[i].type == '(') tag++;
+//         else if (tokens[i].type == ')') tag--;
+//         if (tag == 0 && i < q) return false;  //(3+4)*(5+3) 返回false
+//     }
+//     if (tag != 0) return false;
+//     return true;
+// }
 
 // 计算运算符优先级，优先级越高，数字越小
 static int op_prec(int t) {
     switch (t) {
-    case '!': case TK_NEG: case TK_REF: return 0;
-    case '*': case '/': case '%': return 1;
-    case '+': case '-': return 2;
-    case TK_EQ: case TK_NEQ: return 4;
+    case '!':
+    case TK_NEG:
+    case TK_REF: return 0;
+    case '*':
+    case '/':
+    case '%': return 1;
+    case '+':
+    case '-': return 2;
+    case TK_EQ:
+    case TK_NEQ: return 4;
     case TK_AND: return 8;
     case TK_OR: return 9;
     default: assert(0);
@@ -166,7 +171,7 @@ static int op_prec_cmp(int t1, int t2) {
     return op_prec(t1) - op_prec(t2);
 }
 
-// 寻找主运算符
+// 寻找主运算符（最后做计算的运算符）
 static int dominant_operator(int p, int q) {
     int i;
     int bracket_level = 0;
@@ -181,8 +186,7 @@ static int dominant_operator(int p, int q) {
         case ')':
             bracket_level--;
             if (bracket_level < 0) {
-                op = -1;
-                return op;
+                return -1;
             }
             break;
         default:
@@ -191,11 +195,13 @@ static int dominant_operator(int p, int q) {
                     op = i;
                 }
                 else if (op_prec_cmp(tokens[op].type, tokens[i].type) < 0) {
+                    // op位置优先级高于i位置
                     op = i;
                 }
                 else if (op_prec_cmp(tokens[op].type, tokens[i].type) == 0 &&
                     tokens[i].type != '!' && tokens[i].type != '~' &&
                     tokens[i].type != TK_NEG && tokens[i].type != TK_REF) {
+                    // 优先级相同，除了部分运算符之外，运算符合从左至右规则
                     op = i;
                 }
             }
@@ -205,7 +211,7 @@ static int dominant_operator(int p, int q) {
     return op;
 }
 
-static int eval(int p, int q) {
+static word_t eval(int p, int q) {
     if (p > q) {
         /* Bad expression */
         assert(0);
@@ -215,33 +221,35 @@ static int eval(int p, int q) {
          * For now this token should be a number.
          * Return the value of the number.
          */
-        int val;
+        word_t val;
         switch (tokens[p].type) {
         case TK_REG:
-            // 寄存器类型
-            val = (int)isa_reg_str2val(tokens[p].str + 1, NULL);
+            // 寄存器类型，加一用于去除$符号
+            val = isa_reg_str2val(tokens[p].str + 1, NULL);
             break;
         case TK_NUM:
             // 数据类型
-            val = (int)strtoul(tokens[p].str, NULL, 0);
+            val = (word_t)strtoul(tokens[p].str, NULL, 0);
             break;
         default:
             assert(0);
         }
         return val;
     }
-    else if (check_parentheses(p, q) == true) {
-        /* The expression is surrounded by a matched pair of parentheses.
-         * If that is the case, just throw away the parentheses.
-         */
+    else if (tokens[p].type == '(' && tokens[q].type == ')') {
         return eval(p + 1, q - 1);
     }
     else {
         // op = the position of 主运算符 in the token expression;
         int op = dominant_operator(p, q);
+        // 表达式错误，无主运算符
+        if (op < 0) {
+            assert(0);
+        }
         int op_type = tokens[op].type;
+        // 只包含右运算部分
         if (op_type == '!' || op_type == TK_NEG || op_type == TK_REF) {
-            int val = eval(op + 1, q);
+            word_t val = eval(op + 1, q);
             switch (op_type) {
             case '!':return !val;
             case TK_NEG:return -val;
@@ -251,8 +259,8 @@ static int eval(int p, int q) {
             }
         }
 
-        int val1 = eval(p, op - 1);
-        int val2 = eval(op + 1, q);
+        word_t val1 = eval(p, op - 1);
+        word_t val2 = eval(op + 1, q);
 
         switch (tokens[op].type) {
         case '+': return val1 + val2;
@@ -277,5 +285,5 @@ word_t expr(char *e, bool *success) {
     }
     *success = true;
     /* TODO: Insert codes to evaluate the expression. */
-    return (word_t)eval(0, nr_token - 1);
+    return eval(0, nr_token - 1);
 }

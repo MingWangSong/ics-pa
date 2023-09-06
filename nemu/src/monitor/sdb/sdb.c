@@ -34,8 +34,8 @@ static char *rl_gets() {
         free(line_read);
         line_read = NULL;
     }
-
-    line_read = readline("(nemu) ");
+    // 命令行读取函数，入参：命令行前缀；输出：指向输入命令的字符串指针
+    line_read = readline("(nemu-smw) ");
 
     if (line_read && *line_read) {
         add_history(line_read);
@@ -102,12 +102,12 @@ static int cmd_p(char *args) {
         bool success;
         word_t r = expr(args, &success);
         if (success) {
-            printf(FMT_WORD "\n", r);
+            printf("%lu\n", r);
         }
         else {
             printf("Bad expression\n");
+            return -1;
         }
-
     }
     return 0;
 }
@@ -129,6 +129,7 @@ static struct {
 
 };
 
+// 调试指令数量
 #define NR_CMD ARRLEN(cmd_table)
 
 static int cmd_help(char *args) {
@@ -169,13 +170,11 @@ void sdb_mainloop() {
     for (char *str; (str = rl_gets()) != NULL; ) {
         char *str_end = str + strlen(str);
 
-        /* extract the first token as the command */
+        // 分解字符串，输出指令符
         char *cmd = strtok(str, " ");
         if (cmd == NULL) { continue; }
 
-        /* treat the remaining string as the arguments,
-         * which may need further parsing
-         */
+        // 获取指令参数指针
         char *args = cmd + strlen(cmd) + 1;
         if (args >= str_end) {
             args = NULL;
@@ -189,7 +188,10 @@ void sdb_mainloop() {
         int i;
         for (i = 0; i < NR_CMD; i++) {
             if (strcmp(cmd, cmd_table[i].name) == 0) {
-                if (cmd_table[i].handler(args) < 0) { return; }
+                if (cmd_table[i].handler(args) < 0) {
+                    printf("Command execution error!!! \n");
+                    //return;
+                }
                 break;
             }
         }
