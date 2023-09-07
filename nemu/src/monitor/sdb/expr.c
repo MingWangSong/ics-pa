@@ -247,7 +247,7 @@ static word_t eval(int p, int q) {
             assert(0);
         }
         int op_type = tokens[op].type;
-        // 只包含右运算部分
+        // 主运算符为单目运算符
         if (op_type == '!' || op_type == TK_NEG || op_type == TK_REF) {
             word_t val = eval(op + 1, q);
             switch (op_type) {
@@ -259,6 +259,7 @@ static word_t eval(int p, int q) {
             }
         }
 
+        // 主运算符为双目运算符
         word_t val1 = eval(p, op - 1);
         word_t val2 = eval(op + 1, q);
 
@@ -282,6 +283,22 @@ word_t expr(char *e, bool *success) {
     if (!make_token(e)) {
         *success = false;
         return 0;
+    }
+
+    int i;
+    int prev_type;
+    for (i = 0; i < nr_token; i++) {
+        // 负号和间接引用符处理
+        if (tokens[i].type == '-' || tokens[i].type == '*') {
+            if (i == 0) {
+                tokens[i].type = tokens[i].type == '-' ? TK_NEG : TK_REF;
+                continue;
+            }
+            prev_type = tokens[i - 1].type;
+            if (!(prev_type == ')' || prev_type == TK_NUM || prev_type == TK_REG)) {
+                tokens[i].type = tokens[i].type == '-' ? TK_NEG : TK_REF;
+            }
+        }
     }
     *success = true;
     /* TODO: Insert codes to evaluate the expression. */
