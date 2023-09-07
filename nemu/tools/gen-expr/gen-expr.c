@@ -141,7 +141,7 @@ int main(int argc, char *argv[]) {
         pclose(fp);
 #endif
 
-        printf("%u %s\n", result, buf);
+        printf("[%d] %s=%u\n\n", i, buf, result);
     }
     return 0;
 }
