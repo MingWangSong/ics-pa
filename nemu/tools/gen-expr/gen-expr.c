@@ -131,7 +131,7 @@ int main(int argc, char *argv[]) {
         assert(fp != NULL);
 
         int result;
-        fscanf(fp, "%d", &result);
+        (void)fscanf(fp, "%d", &result);
 #ifndef __ICS_EXPORT
         ret = pclose(fp);
         if (ret != 0) continue;
