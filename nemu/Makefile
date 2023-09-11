@@ -59,3 +59,6 @@ else
 # Include rules to build NEMU
 include $(NEMU_HOME)/scripts/native.mk
 endif
+
+# 统计代码函数（去除空行和注释行）
+# find . -name "*.c" -o -name "*.h" | xargs cat | grep -v ^$ | grep -v ^# | wc -l
