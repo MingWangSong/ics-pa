@@ -19,7 +19,6 @@
 #include <readline/history.h>
 #include "sdb.h"
 #include <memory/vaddr.h>
-#include "watchpoint.c"
 
 static int is_batch_mode = false;
 
