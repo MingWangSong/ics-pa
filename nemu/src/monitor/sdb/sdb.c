@@ -19,6 +19,7 @@
 #include <readline/history.h>
 #include "sdb.h"
 #include <memory/vaddr.h>
+#include "watchpoint.c"
 
 static int is_batch_mode = false;
 
@@ -69,8 +70,7 @@ static int cmd_info(char *args) {
         isa_reg_display();
     }
     else if (strcmp(arg, "w") == 0) {
-        /* code  TODO*/
-        printf("TODO!!\n");
+        list_watchpoint();
     }
     else {
         printf("Unknown command '%s'\n", arg);
@@ -112,6 +112,34 @@ static int cmd_p(char *args) {
     return 0;
 }
 
+static int cmd_w(char *args) {
+    if (args != NULL) {
+        int NO = set_watchpoint(args);
+        if (NO != -1) {
+            printf("Set watchpoint #%d\n", NO);
+        }
+        else {
+            printf("Bad expression\n");
+        }
+    }
+    return 0;
+}
+
+static int cmd_d(char *args) {
+    char *arg = strtok(NULL, " ");
+    if (arg == NULL) {
+        Log("usage: d n");
+    }
+    else {
+        int NO;
+        sscanf(args, "%d", &NO);
+        if (delete_watchpoint(NO)) {
+            printf("Watchpoint #%d does not exist\n", NO);
+        }
+    }
+    return 0;
+}
+
 static struct {
     const char *name;
     const char *description;
@@ -120,10 +148,12 @@ static struct {
   { "help", "Display information about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
-  { "si", "Single step execution", cmd_si},
+  { "si", "Single step execution", cmd_si },
   { "info", "Print program status. r:register status; w:monitoring point information", cmd_info},
-  { "x", "Scan Memory", cmd_x},
+  { "x", "Scan Memory", cmd_x },
   { "p", "Evaluate the value of expression", cmd_p },
+  { "w", "Set watchpoint", cmd_w },
+  { "d", "Delete watchpoint", cmd_d},
 
   /* TODO: Add more commands */
 
