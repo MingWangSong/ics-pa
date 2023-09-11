@@ -51,7 +51,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
   int ilen = s->snpc - s->pc;
   int i;
   uint8_t *inst = (uint8_t *)&s->isa.inst.val;
-  for (i = ilen - 1; i >= 0; i --) {
+  for (i = ilen - 1; i >= 0; i--) {
     p += snprintf(p, 4, " %02x", inst[i]);
   }
   int ilen_max = MUXDEF(CONFIG_ISA_x86, 8, 4);
@@ -62,9 +62,9 @@ static void exec_once(Decode *s, vaddr_t pc) {
   p += space_len;
 
 #ifndef CONFIG_ISA_loongarch32r
-  void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
+  void disassemble(char *str, int size, uint64_t pc, uint8_t * code, int nbyte);
   disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
-      MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst.val, ilen);
+    MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst.val, ilen);
 #else
   p[0] = '\0'; // the upstream llvm does not support loongarch32r
 #endif
@@ -72,10 +72,11 @@ static void exec_once(Decode *s, vaddr_t pc) {
 }
 
 static void execute(uint64_t n) {
-  Decode s;
-  for (;n > 0; n --) {
+    Decode s;
+    // n是无符号数，如果传入n=-1则n是无符号数最大的数字
+    for (;n > 0; n--) {
     exec_once(&s, cpu.pc);
-    g_nr_guest_inst ++;
+    g_nr_guest_inst++;
     trace_and_difftest(&s, cpu.pc);
     if (nemu_state.state != NEMU_RUNNING) break;
     IFDEF(CONFIG_DEVICE, device_update());
@@ -96,14 +97,14 @@ void assert_fail_msg() {
   statistic();
 }
 
-/* Simulate how the CPU works. */
+/* Simulate how the CPU works. CPU执行入口*/
 void cpu_exec(uint64_t n) {
   g_print_step = (n < MAX_INST_TO_PRINT);
   switch (nemu_state.state) {
-    case NEMU_END: case NEMU_ABORT:
-      printf("Program execution has ended. To restart the program, exit NEMU and run again.\n");
-      return;
-    default: nemu_state.state = NEMU_RUNNING;
+  case NEMU_END: case NEMU_ABORT:
+    printf("Program execution has ended. To restart the program, exit NEMU and run again.\n");
+    return;
+  default: nemu_state.state = NEMU_RUNNING;
   }
 
   uint64_t timer_start = get_time();
@@ -114,15 +115,15 @@ void cpu_exec(uint64_t n) {
   g_timer += timer_end - timer_start;
 
   switch (nemu_state.state) {
-    case NEMU_RUNNING: nemu_state.state = NEMU_STOP; break;
+  case NEMU_RUNNING: nemu_state.state = NEMU_STOP; break;
 
-    case NEMU_END: case NEMU_ABORT:
-      Log("nemu: %s at pc = " FMT_WORD,
-          (nemu_state.state == NEMU_ABORT ? ANSI_FMT("ABORT", ANSI_FG_RED) :
-           (nemu_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) :
-            ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED))),
-          nemu_state.halt_pc);
-      // fall through
-    case NEMU_QUIT: statistic();
+  case NEMU_END: case NEMU_ABORT:
+    Log("nemu: %s at pc = " FMT_WORD,
+      (nemu_state.state == NEMU_ABORT ? ANSI_FMT("ABORT", ANSI_FG_RED) :
+        (nemu_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) :
+          ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED))),
+      nemu_state.halt_pc);
+    // fall through
+  case NEMU_QUIT: statistic();
   }
 }
